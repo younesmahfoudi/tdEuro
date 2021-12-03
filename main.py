@@ -8,6 +8,7 @@ df = pd.read_csv(csv_file, sep=';')
 df = pd.DataFrame(df,columns=['Date','N1','N2','N3','N4','N5','E1','E2','Winner','Gain'])
 df['Winner'] = df['Winner'].map('1'.format)
 
+#Genere un tirage aléatoire, sans doublon et diférent de @param(combi)
 def random_Combi(combi):
     n_list = random.sample(range(1,50), 5)
     e_list = random.sample(range(1,12), 2)
@@ -17,31 +18,36 @@ def random_Combi(combi):
     else:
         return list
 
-
-def new_El(date, combi):
+#créer une une liste composé d'un @param(date), un @param(combi) et 2x 0 au format de la dataFrame   
+def new_El(date, combi): 
     new_Combi = random_Combi(combi)
     new_el = [(date, new_Combi[0], new_Combi[1], new_Combi[2], new_Combi[3],new_Combi[4],new_Combi[5], new_Combi[6], '0', '0')]
     return new_el
 
+#creer une nouvelle dataFrame avec une date et une combinaison
 def new_Df(date,combi):
     new_el = new_El(date,combi)
     new_df = pd.DataFrame(new_el, columns=['Date','N1','N2','N3','N4','N5','E1','E2','Winner','Gain'])
     return new_df
 
+#extraire une combinaison d'un dataFrame
 def read_Combi(df):
     return [df['N1'],df['N2'],df['N3'],df['N4'],df['N5'],df['E1'],df['E2']]
 
 if __name__ == "__main__":
 
+    #ajouter 4 combinaisons fausses
     for row in df.index:
         for x in range(4):
             new_df = new_Df(df['Date'][row],read_Combi(df.iloc[4,:]))
             df = df.append(new_df, ignore_index=True)
 
+    #trie
     df = df.sort_values(by=['Date'])
 
     first_per = int((80*len(df))/100)
 
+    #split
     df1 = df.iloc[:first_per,:]
     df2 = df.iloc[first_per:,:]
 
