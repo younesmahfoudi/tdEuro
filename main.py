@@ -1,7 +1,12 @@
+from datetime import datetime
 import pandas as pd 
 import random
+from pandas._libs.tslibs.timestamps import Timestamp
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestRegressor
+from sklearn import metrics
 
 csv_file = 'EuroMillions_numbers.csv'  
 df = pd.read_csv(csv_file, sep=';')
@@ -34,7 +39,15 @@ def new_Df(date,combi):
 def read_Combi(df):
     return [df['N1'],df['N2'],df['N3'],df['N4'],df['N5'],df['E1'],df['E2']]
 
+def date_Converter(date):
+    d = datetime.strptime(date,'%Y-%m-%d')
+    timestamp = datetime.timestamp(d)
+    return timestamp
+    
+
 if __name__ == "__main__":
+
+    df['Date'] = df['Date'].apply(date_Converter)
 
     #ajouter 4 combinaisons fausses
     for row in df.index:
@@ -48,8 +61,8 @@ if __name__ == "__main__":
     first_per = int((80*len(df))/100)
 
     #split
-    df1 = df.iloc[:first_per,:]
-    df2 = df.iloc[first_per:,:]
+    X_train = df.iloc[:first_per,:]
+    X_test = df.iloc[first_per:,:]
 
     # modele_rf = RandomForestClassifier(
     #     n_estimators=100,
@@ -83,8 +96,22 @@ if __name__ == "__main__":
 
     # modele_rf.fit(x_train, y_train)
 
-    print(len(df1))
-    print(len(df2))
+    y_train = X_train['Winner']
+    y_test = X_test['Winner']
+    del X_train['Winner']
+    del X_test['Winner']
+
+    print(y_train)
+
+    clf = RandomForestClassifier(max_depth=2, random_state=0)
+    clf.fit(X_train, y_train)
+
+
+    y_predict = clf.predict_proba(X_test)
+    print(y_predict)
+
+
+    
 
 
 
