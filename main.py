@@ -12,6 +12,7 @@ from time import strftime
 from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
+import json
 
 app = FastAPI()
 
@@ -22,7 +23,7 @@ df['Winner'] = df['Winner'].map('1'.format)
 
 
 
-#Genere un tirage aléatoire, sans doublon et diférent de @param(combi)
+#Genere un tirage aléatoire, sans doublon et différent de @param(combi)
 def random_Combi(combi):
     n_list = random.sample(range(1,50), 5)
     e_list = random.sample(range(1,12), 2)
@@ -73,7 +74,9 @@ def tabToDf(predict):
     df_res = pd.DataFrame(res,columns=['Predict'])
     return df_res
 
+# Conversion des dates en secondes 
 df['Date'] = df['Date'].apply(date_Converter)
+# Suppresion de la colonne Gain
 del df['Gain']
 
 #ajouter 4 combinaisons fausses
@@ -85,9 +88,10 @@ for row in df.index:
 #trie
 df = df.sort_values(by=['Date'])
 
+# 80 %
 first_per = int((80*len(df))/100)
 
-#split
+#split des DF
 X_train = df.iloc[:first_per,:]
 X_test = df.iloc[first_per:,:]
 
@@ -108,12 +112,10 @@ y_predict = pd.concat([X_test,y_predict], axis=1, join='inner')
 
 y_predict = y_predict.sort_values(by=['Predict'])
 
+# Ensemble de combinaison avec une probabilité de 0.8 ( valeur que nous avons choisi)
 target_proba = y_predict[y_predict['Predict']>0.8]
 
-test = target_proba.sample(n=1)
-
-print(test)
-
+# Class combinaison
 class Combi(BaseModel):
     N1: int
     N2: int
@@ -134,8 +136,37 @@ async def predict_Combi(combi: Combi):
 
 @app.get("/api/predict")
 async def combi_Predict():
-    res = target_proba.sample(n=1).to_json(orient = 'columns')
-    return res
+    res = target_proba.sample(n=1)
+    # Dataframe to list
+    res = res.astype(int).to_numpy().tolist()
+    # Suppression date
+    del res[0][0]
+    #List list to list
+    flattened = [val for sublist in res for val in sublist]
+    res = flattened
+    res = json.dumps(res)
+    return "Combinaison: " + res
+
+
+# à implémenter
+@app.get("api/model")
+async def get_Infos_Model():
+    metriques = "?"
+    algo = "?"
+    param = "?"
+    return {"Metriques de performance" : metriques, "Nom de l'algo" : algo, "Paramètres d'entraînement" : param }
+
+# à implémenter
+@app.put("api/model")
+async def add_Data():
+    return {" "}
+
+# à implémenter
+@app.post("api/model")
+async def retrain_Model():
+    return {" "}
+
+
 
 if __name__ == "__main__":
 
