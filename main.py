@@ -141,6 +141,23 @@ def tabToDf(predict):
     df_res = pd.DataFrame(res,columns=['Predict'])
     return df_res
 
+def predictConverter(predict):
+    if (predict >= 0.6):
+        res = 1
+    else:
+         res = 0
+    return res
+
+def compareTwoDF(df1, df2, attribute):
+    res = 0
+    for row in df1.index:
+        if df1[attribute][row] == df2[attribute][row]:
+            res += 1
+    return res/df1.index
+    
+    
+
+
 # Conversion des dates en secondes 
 df['Date'] = df['Date'].apply(date_Converter)
 # Suppresion de la colonne Gain
@@ -175,9 +192,21 @@ y_predict = clf.predict_proba(X_test)
 
 y_predict = tabToDf(y_predict)
 
+#print(y_predict)
+
+y_predict_metric = y_predict
+
+print(y_predict_metric)
+
+# Application de la métrique 
+y_predict_metric = y_predict_metric['Predict'].apply(predictConverter)
+
 y_predict = pd.concat([X_test,y_predict], axis=1, join='inner')
 
 y_predict = y_predict.sort_values(by=['Predict'])
+
+# Application de la métrique 
+y_predict['Predict'] = y_predict['Predict'].apply(predictConverter)
 
 # Ensemble de combinaison avec une probabilité de 0.8 ( valeur que nous avons choisi)
 target_proba = y_predict[y_predict['Predict']>0.8]
@@ -216,10 +245,10 @@ async def combi_Predict():
 
 
 # à implémenter
-@app.get("api/model")
+@app.get("/api/model")
 async def get_Infos_Model():
     metriques = "?"
-    algo = "?"
+    algo = clf.__class__.__name__
     param = "?"
     return {"Metriques de performance" : metriques, "Nom de l'algo" : algo, "Paramètres d'entraînement" : param }
 
@@ -238,7 +267,9 @@ async def retrain_Model():
 if __name__ == "__main__":
 
     test = clf.predict_proba(new_DfWC([7,12,18,23,32,4,12]))
-
+    #print(y_predict)
+    #print(compareTwoDF(y_predict_metric, y_test, 'Predict'))
+    #print(y_predict_metric)
     print(test)
     
 
