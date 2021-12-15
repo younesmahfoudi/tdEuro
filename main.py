@@ -23,8 +23,15 @@ df['Winner'] = df['Winner'].map('1'.format)
 
 
 
-#Genere un tirage aléatoire, sans doublon et différent de @param(combi)
 def random_Combi(combi):
+    '''
+    Genere un tirage aléatoire, sans doublon et différent de @param(combi)
+
+            Parameters:
+                    combi : 
+            Returns:
+                    list : 
+    '''
     n_list = random.sample(range(1,50), 5)
     e_list = random.sample(range(1,12), 2)
     list = n_list + e_list
@@ -33,40 +40,100 @@ def random_Combi(combi):
     else:
         return list
 
-#créer une une liste composé d'un @param(date), un @param(combi) et 2x 0 au format de la dataFrame   
 def new_El(date, combi): 
+    '''
+    créer une une liste composé d'un @param(date), un @param(combi) et 2x 0 au format de la dataFrame   
+
+            Parameters:
+                    date : 
+                    combi
+            Returns:
+                    new_el : 
+    '''
     new_Combi = random_Combi(combi)
     new_el = [(date, new_Combi[0], new_Combi[1], new_Combi[2], new_Combi[3],new_Combi[4],new_Combi[5], new_Combi[6], '0')]
     return new_el
 
-#creer une nouvelle dataFrame avec une date et une combinaison
+
 def new_Df(date,combi):
+    '''
+    creer une nouvelle dataFrame avec une date et une combinaison
+
+            Parameters:
+                    date : 
+                    combi :
+            Returns:
+                    new_df : 
+    '''
     new_el = new_El(date,combi)
     new_df = pd.DataFrame(new_el, columns=['Date','N1','N2','N3','N4','N5','E1','E2','Winner'])
     return new_df
 
 def new_ElWC(date, combi): 
+    '''
+    creer une nouvel élément avec une date et une combinaison
+
+            Parameters:
+                    date : 
+                    combi :
+            Returns:
+                    new_el : 
+    '''
     new_el = [(date, combi[0], combi[1], combi[2], combi[3],combi[4],combi[5], combi[6])]
     return new_el
 
-#creer une nouvelle dataFrame avec une combi 
+
 def new_DfWC(combi):
+    '''
+    creer une nouvelle dataFrame avec une combi 
+
+            Parameters:
+                    combi :
+            Returns:
+                    new_df : Dataframe avec une date et une combinaison d'élements
+    '''
     date = datetime.today().strftime('%Y-%m-%d')
     new_el = new_ElWC(date_Converter(date),combi)
     new_df = pd.DataFrame(new_el, columns=['Date','N1','N2','N3','N4','N5','E1','E2'])
     return new_df
 
-#extraire une combinaison d'un dataFrame
+
 def read_Combi(df):
+    '''
+    extraire une combinaison d'un dataFrame
+
+            Parameters:
+                    df :
+            Returns:
+
+    '''
     return [df['N1'],df['N2'],df['N3'],df['N4'],df['N5'],df['E1'],df['E2']]
 
 
 def date_Converter(date):
+    '''
+    Conversion date en seconde
+
+            Parameters:
+                    date : date
+            Returns:
+                    timestamp : 
+
+    '''
     d = datetime.strptime(date,'%Y-%m-%d')
     timestamp = datetime.timestamp(d)
     return timestamp
 
 def tabToDf(predict):
+    '''
+    Conversion tableau to Dataframe
+
+            Parameters:
+                    predict : 
+            Returns:
+                    df_res : DataFrame 
+
+    '''
     res = []
     for i in range(len(predict)):
         res.append(predict[i][0])
