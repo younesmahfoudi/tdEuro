@@ -6,7 +6,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+
 from time import strftime
 
 from typing import Optional
@@ -142,6 +143,14 @@ def tabToDf(predict):
     return df_res
 
 def predictConverter(predict):
+    '''
+
+            Parameters:
+                    predict : 
+            Returns:
+                    res : entier 
+
+    '''
     if (predict >= 0.6):
         res = 1
     else:
@@ -149,13 +158,41 @@ def predictConverter(predict):
     return res
 
 def compareTwoDF(df1, df2, attribute):
+    '''
+    Comparer deux dataframe
+            Parameters:
+                    df1 : Dataframe
+                    df2 : Dataframe 
+            Returns:
+    '''
     res = 0
     for row in df1.index:
         if df1[attribute][row] == df2[attribute][row]:
             res += 1
     return res/df1.index
     
-    
+def verifValeurCombinaison(combinaison):
+    '''
+    Vérifie les nombres saisies pour jouer à l'Euromillions
+
+            Parameters:
+                    combinaison : Combinaison
+            Return:
+                    bool : boolean ( valeurs saisies valides ou non ) 
+    '''
+    bool = True
+    for key, value in combinaison:
+        if(value>0):
+            if((key=="E1") or (key=="E2")):
+                if((value>12)):
+                    bool = False
+            else :
+                if((value>50)):
+                    bool = False 
+        else: 
+            bool = False
+
+    return bool          
 
 
 # Conversion des dates en secondes 
@@ -227,8 +264,12 @@ class Probability(BaseModel):
 
 @app.post("/api/predict")
 async def predict_Combi(combi: Combi):
-    res = clf.predict_proba(new_DfWC([combi.N1,combi.N2,combi.N3,combi.N4,combi.N5,combi.E1,combi.E2]))[0][0]
-    return res
+    if(verifValeurCombinaison(combi)):
+        res = clf.predict_proba(new_DfWC([combi.N1,combi.N2,combi.N3,combi.N4,combi.N5,combi.E1,combi.E2]))[0][0]
+        return res
+    else : 
+        raise HTTPException(status_code=404, detail="Nombres saisies invalides : les 5 premiers numéros doivent être compris entre 1 et 50 inclus et les 2 derniers numéros étoiles de 1 à 12.")
+
 
 @app.get("/api/predict")
 async def combi_Predict():
