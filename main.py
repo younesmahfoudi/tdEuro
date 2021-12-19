@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 from fastapi import FastAPI, HTTPException
+import numpy as np
 
 from time import strftime
 
@@ -233,17 +234,24 @@ y_predict = tabToDf(y_predict)
 
 y_predict_metric = y_predict
 
-print(y_predict_metric)
-
 # Application de la métrique 
-y_predict_metric = y_predict_metric['Predict'].apply(predictConverter)
+y_predict_metric['Predict'] = y_predict_metric['Predict'].apply(predictConverter)
 
 y_predict = pd.concat([X_test,y_predict], axis=1, join='inner')
 
 y_predict = y_predict.sort_values(by=['Predict'])
 
 # Application de la métrique 
-y_predict['Predict'] = y_predict['Predict'].apply(predictConverter)
+print(y_test.value_counts())
+# y_predict_metric['Winner'] = y_test
+win_metric = abs(y_predict_metric['Predict'].value_counts()[1] - y_test.value_counts()[1])
+metric = (win_metric/len(y_test))*100
+
+print(y_predict_metric['Predict'].value_counts())
+print(len(y_test))
+print(metric)
+# print(y_predict_metric)
+
 
 # Ensemble de combinaison avec une probabilité de 0.8 ( valeur que nous avons choisi)
 target_proba = y_predict[y_predict['Predict']>0.8]
@@ -288,20 +296,35 @@ async def combi_Predict():
 # à implémenter
 @app.get("/api/model")
 async def get_Infos_Model():
-    metriques = "?"
+    metriques = metric
     algo = clf.__class__.__name__
     param = "?"
-    return {"Metriques de performance" : metriques, "Nom de l'algo" : algo, "Paramètres d'entraînement" : param }
+    return {"Metriques de performance (pourcentage d'érreur)" : metriques, "Nom de l'algo" : algo, "Paramètres d'entraînement" : param }
 
 # à implémenter
 @app.put("api/model")
-async def add_Data():
-    return {" "}
+async def add_Data(combi: Combi):
+    if(verifValeurCombinaison(combi)):
+        new_df = new_DfWC([combi.N1,combi.N2,combi.N3,combi.N4,combi.N5,combi.E1,combi.E2])
+        df.append(new_df, ignore_index=True)
+        print(df)
+        return {"Donnée ajoutée"}
+    else : 
+        raise HTTPException(status_code=404, detail="Nombres saisies invalides : les 5 premiers numéros doivent être compris entre 1 et 50 inclus et les 2 derniers numéros étoiles de 1 à 12.")
+    
 
 # à implémenter
 @app.post("api/model")
 async def retrain_Model():
-    return {" "}
+    #split des DF
+    X_train = df.iloc[:first_per,:]
+    X_test = df.iloc[first_per:,:]
+    y_train = X_train['Winner']
+    y_test = X_test['Winner']
+    del X_train['Winner']
+    del X_test['Winner']
+    clf.fit(X_train, y_train)
+    return {"Modèle réentrainé"}
 
 
 
@@ -311,7 +334,7 @@ if __name__ == "__main__":
     #print(y_predict)
     #print(compareTwoDF(y_predict_metric, y_test, 'Predict'))
     #print(y_predict_metric)
-    print(test)
+    #print(test)
     
 
     
@@ -321,6 +344,3 @@ if __name__ == "__main__":
 
 
 
-
-
-    
